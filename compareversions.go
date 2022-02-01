@@ -50,31 +50,31 @@ func loadVersionData(filenames []string) (*pdpb.CompatibilityMatrix, error) {
 
 func compareVersions(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersion string) bool {
 	for _, entry := range matrix.Entries {
-		if s, err := strconv.ParseInt(systemVersion, 10, 32); err == nil {
-			if minS, err := strconv.ParseInt(entry.MinimumSystemVersion, 10, 32); err == nil {
-				fmt.Printf("%v, %v\n", s, minS)
 
-				if entry.MinimumSystemVersion > systemVersion {
-					fmt.Printf("systemVersion: %s > %s\n", entry.MinimumSystemVersion, systemVersion)
-				}
+		if minS, err := strconv.ParseInt(entry.MinimumSystemVersion, 10, 32); err == nil {
+			if systemVersionNumeric, err := strconv.ParseInt(systemVersion, 10, 32); err == nil {
+				if minS > systemVersionNumeric {
+					fmt.Printf("systemVersion: %v > %v\n", minS, systemVersionNumeric)
 
-				fmt.Printf("systemVersion match: %s <= %s\n", entry.MinimumSystemVersion, systemVersion)
+					fmt.Printf("systemVersion match: %v <= %v\n", minS, systemVersionNumeric)
 
-				v1, err := version.NewVersion(entry.MinimumPlanVersion)
+					v1, err := version.NewVersion(entry.MinimumPlanVersion)
 
-				if err != nil {
-					fmt.Printf("Error comparing planVersions: %v\n", err)
-					v2, err := version.NewVersion(planVersion)
 					if err != nil {
 						fmt.Printf("Error comparing planVersions: %v\n", err)
+						v2, err := version.NewVersion(planVersion)
+						if err != nil {
+							fmt.Printf("Error comparing planVersions: %v\n", err)
+						}
+						if v1.GreaterThan(v2) {
+							print("planVersion: %v > %v", v1, v2)
+							print("planVersion match: %s <= %s", entry.MinimumPlanVersion, planVersion)
+						}
+
 					}
-					if v1.GreaterThan(v2) {
-						print("planVersion: %v > %v", v1, v2)
-						print("planVersion match: %s <= %s", entry.MinimumPlanVersion, planVersion)
-					}
-					return true
 				}
 			}
+			return true
 		}
 	}
 	return false
@@ -112,6 +112,6 @@ func main() {
 
 	fmt.Printf("debug: %s\n", string(j))
 
-	compareVersions(vd, "", "")
+	print(compareVersions(vd, "", ""))
 
 }
