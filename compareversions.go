@@ -80,21 +80,6 @@ func compareVersions(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersio
 	return false
 }
 
-/*
-		for minSymstemVersion, minPlanVersion in loadVersionData():
-
-	        if minSystemVersion > systemVersion:
-	            continue
-
-	        if semver.compare(minPlanVersion, planVersion) > 0:
-	            continue
-
-
-	        return True
-
-	    return False
-*/
-
 func main() {
 
 	vd, err := loadVersionData([]string{"./versions.dat"})
