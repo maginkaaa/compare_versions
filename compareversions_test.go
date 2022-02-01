@@ -114,7 +114,7 @@ func Test_compareVersions(t *testing.T) {
 
 				test19 := compareVersions(tt.args.matrix, "1290", "0.9.0") // should return True
 				if test19 != true {
-					t.Errorf("compareVersions() = %v, want %v", test16, true)
+					t.Errorf("compareVersions() = %v, want %v", test19, true)
 				}
 
 				test20 := compareVersions(tt.args.matrix, "1289", "0.8.9") // should return False
