@@ -4,14 +4,19 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
-	"strings"
-	"golang.org/x/mod/semver"
+
+	"encoding/json"
+
+	pdpb "github.com/holoplot/sw__protocols_generated/go/product"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/hashicorp/go-version"
 )
 
+func loadVersionData(filenames []string) (*pdpb.CompatibilityMatrix, error) {
 
-func loadVersionData(filenames []string) ([]*pdpb.Version, string, error) {
+	ret := &pdpb.CompatibilityMatrix{}
+
 	var err error
 	var f *os.File
 
@@ -24,48 +29,81 @@ func loadVersionData(filenames []string) ([]*pdpb.Version, string, error) {
 	}
 
 	if err != nil {
-		return nil, "", fmt.Errorf("cannot open any of %v", filenames)
+		return nil, fmt.Errorf("cannot open any of %v", filenames)
 	}
 
 	b, err := ioutil.ReadAll(f)
 	if err != nil {
-		return nil, "", fmt.Errorf("cannot read from %s: %v", f.Name(), err)
+		return nil, fmt.Errorf("cannot read from %s: %v", f.Name(), err)
 	}
 
-	pd := pdpb.AllVersions{}
-	err = proto.Unmarshal(b, &pd)
+	err = proto.Unmarshal(b, ret)
 	if err != nil {
-		return nil, "", fmt.Errorf("cannot unmarshal %s: %v", f.Name(), err)
+		return nil, fmt.Errorf("cannot unmarshal %s: %v", f.Name(), err)
 	}
 
-	return pd.Version, f.Name(), nil
+	return ret, nil
+
 }
 
+func compareVersions(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersion string) bool {
 
-type Version struct {
-	SystemVersion  string
-	PlanVersion    string
-	VersionData *pdpb.Version
+	for _, entry := range matrix.Entries {
+
+		//fmt.Printf("MinimumPlanVersion: %s -- MinimumSystemVersion: %s \n", entry.MinimumPlanVersion, entry.MinimumSystemVersion)
+		if entry.MinimumSystemVersion > systemVersion {
+			fmt.Printf("systemVersion: %s > %s\n", entry.MinimumSystemVersion, systemVersion)
+		}
+		fmt.Printf("systemVersion match: %s <= %s\n", entry.MinimumSystemVersion, systemVersion)
+
+		v1, err := version.NewVersion(entry.MinimumPlanVersion)
+		if err != nil {
+			fmt.Printf("Error comparing planVersions: %v\n", err)
+		v2, err := version.NewVersion(planVersion)
+		if err != nil {
+			fmt.Printf("Error comparing planVersions: %v\n", err)
+		} 
+		if v1.GreaterThan(v2) {
+			print("planVersion: %v > %v", v1, v2)
+			print("planVersion match: %s <= %s", entry.MinimumPlanVersion, planVersion)
+		}
+		return true
+	}
+	return false
 }
 
+/*
+		for minSymstemVersion, minPlanVersion in loadVersionData():
 
-func compareVersions() {
-	for minSymstemVersion, minPlanVersion in loadVersionData():
-        
-        if minSystemVersion > systemVersion:
-            continue
+	        if minSystemVersion > systemVersion:
+	            continue
 
-        if semver.compare(minPlanVersion, planVersion) > 0:
-            continue
+	        if semver.compare(minPlanVersion, planVersion) > 0:
+	            continue
 
 
-        return True
+	        return True
 
-    return False
-}
+	    return False
+*/
 
 func main() {
 
-	fmt.Printf("Hello World")
+	vd, err := loadVersionData([]string{"./versions.dat"})
+
+	if err != nil {
+		fmt.Printf("Error executing loadVersionData: %v\n", err)
+		os.Exit(-1)
+	}
+
+	j, err := json.MarshalIndent(vd, "", "  ")
+	if err != nil {
+		fmt.Printf("Cannot marshall version data: %v\n", err)
+		os.Exit(-1)
+	}
+
+	fmt.Printf("debug: %s\n", string(j))
+
+	compareVersions(vd, "", "")
 
 }
