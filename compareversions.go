@@ -58,18 +58,19 @@ func compareVersions(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersio
 
 					//fmt.Printf("systemVersion match: %v <= %v\n", minS, systemVersionNumeric)
 
-					v1, err := version.NewVersion(entry.MinimumPlanVersion)
+					minPlan, err := version.NewVersion(entry.MinimumPlanVersion)
 
 					if err != nil {
 						fmt.Printf("Error comparing planVersions: %v\n", err)
-						v2, err := version.NewVersion(planVersion)
+						planV, err := version.NewVersion(planVersion)
 						if err != nil {
 							fmt.Printf("Error comparing planVersions: %v\n", err)
+
+							if minPlan.GreaterThan(planV) {
+								print("planVersion: %v > %v", minPlan, planV)
+							}
 						}
-						if v1.GreaterThan(v2) {
-							print("planVersion: %v > %v", v1, v2)
-							print("planVersion match: %s <= %s", entry.MinimumPlanVersion, planVersion)
-						}
+						print("planVersion match: %s <= %s", minPlan, planV)
 
 					}
 				}

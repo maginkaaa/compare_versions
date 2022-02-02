@@ -7,7 +7,30 @@ import (
 )
 
 func Test_compareVersions(t *testing.T) {
-	mm := &pdpb.CompatibilityMatrix{} //TBD: Fill me with live
+	mm := &pdpb.CompatibilityMatrix{
+		Entries: []*pdpb.CompatibilityMatrix_CompatibilityMatrixEntry{
+			{
+				MinimumSystemVersion: "1001",
+				MinimumPlanVersion:   "0.7.1",
+			},
+			{
+				MinimumSystemVersion: "1125",
+				MinimumPlanVersion:   "0.7.2",
+			},
+			{
+				MinimumSystemVersion: "1179",
+				MinimumPlanVersion:   "0.8.0",
+			},
+			{
+				MinimumSystemVersion: "1289",
+				MinimumPlanVersion:   "0.9.0",
+			},
+			{
+				MinimumSystemVersion: "1375",
+				MinimumPlanVersion:   "0.10.0",
+			},
+		},
+	}
 
 	type args struct {
 		matrix        *pdpb.CompatibilityMatrix
