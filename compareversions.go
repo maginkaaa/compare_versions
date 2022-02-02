@@ -54,9 +54,9 @@ func compareVersions(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersio
 		if minS, err := strconv.ParseInt(entry.MinimumSystemVersion, 10, 32); err == nil {
 			if systemVersionNumeric, err := strconv.ParseInt(systemVersion, 10, 32); err == nil {
 				if minS > systemVersionNumeric {
-					fmt.Printf("systemVersion: %v > %v\n", minS, systemVersionNumeric)
+					//fmt.Printf("systemVersion: %v > %v\n", minS, systemVersionNumeric)
 
-					fmt.Printf("systemVersion match: %v <= %v\n", minS, systemVersionNumeric)
+					//fmt.Printf("systemVersion match: %v <= %v\n", minS, systemVersionNumeric)
 
 					v1, err := version.NewVersion(entry.MinimumPlanVersion)
 
@@ -73,6 +73,7 @@ func compareVersions(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersio
 
 					}
 				}
+
 			}
 			return true
 		}
