@@ -7,15 +7,13 @@ import (
 
 	"strconv"
 
-	"encoding/json"
-
 	pdpb "github.com/holoplot/sw__protocols_generated/go/product"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/hashicorp/go-version"
 )
 
-func loadVersionData(filenames []string) (*pdpb.CompatibilityMatrix, error) {
+func loadMatrix(filenames []string) (*pdpb.CompatibilityMatrix, error) {
 
 	ret := &pdpb.CompatibilityMatrix{}
 
@@ -45,60 +43,40 @@ func loadVersionData(filenames []string) (*pdpb.CompatibilityMatrix, error) {
 	}
 
 	return ret, nil
-
 }
 
-func compareVersions(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersion string) bool {
+func compatible(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersion string) bool {
+
+	var minimalSystemVersion, availableSystemVersion int64
+	var err error
+
+	if availableSystemVersion, err = strconv.ParseInt(systemVersion, 10, 32); err != nil {
+		return false
+	}
+
 	for _, entry := range matrix.Entries {
+		if minimalSystemVersion, err = strconv.ParseInt(entry.MinimumSystemVersion, 10, 32); err != nil {
+			return false
+		}
 
-		if minS, err := strconv.ParseInt(entry.MinimumSystemVersion, 10, 32); err == nil {
-			if systemVersionNumeric, err := strconv.ParseInt(systemVersion, 10, 32); err == nil {
-				if minS > systemVersionNumeric {
-					//fmt.Printf("systemVersion: %v > %v\n", minS, systemVersionNumeric)
+		if availableSystemVersion < minimalSystemVersion {
+			continue
+		}
 
-					//fmt.Printf("systemVersion match: %v <= %v\n", minS, systemVersionNumeric)
+		minPlanSemanticVersion, err := version.NewVersion(entry.MinimumPlanVersion)
+		if err != nil {
+			continue
+		}
 
-					minPlan, err := version.NewVersion(entry.MinimumPlanVersion)
+		semanticPlanVersion, err := version.NewVersion(planVersion)
+		if err != nil {
+			continue
+		}
 
-					if err != nil {
-						fmt.Printf("Error comparing planVersions: %v\n", err)
-						planV, err := version.NewVersion(planVersion)
-						if err != nil {
-							fmt.Printf("Error comparing planVersions: %v\n", err)
-
-							if minPlan.GreaterThan(planV) {
-								print("planVersion: %v > %v", minPlan, planV)
-							}
-						}
-						print("planVersion match: %s <= %s", minPlan, planV)
-
-					}
-				}
-
-			}
+		if semanticPlanVersion.GreaterThanOrEqual(minPlanSemanticVersion) {
 			return true
 		}
+		return false
 	}
 	return false
-}
-
-func main() {
-
-	vd, err := loadVersionData([]string{"./versions.dat"})
-
-	if err != nil {
-		fmt.Printf("Error executing loadVersionData: %v\n", err)
-		os.Exit(-1)
-	}
-
-	j, err := json.MarshalIndent(vd, "", "  ")
-	if err != nil {
-		fmt.Printf("Cannot marshall version data: %v\n", err)
-		os.Exit(-1)
-	}
-
-	fmt.Printf("debug: %s\n", string(j))
-
-	print(compareVersions(vd, "", ""))
-
 }
