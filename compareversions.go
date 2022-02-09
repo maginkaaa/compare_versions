@@ -78,5 +78,6 @@ func compatible(matrix *pdpb.CompatibilityMatrix, systemVersion, planVersion str
 		}
 		return false
 	}
+
 	return false
 }
